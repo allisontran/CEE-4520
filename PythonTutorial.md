@@ -230,7 +230,6 @@ max_flow_new
 
 print('The new maximum flow rate at ',ut.round_sf(temperature,2),' is ',ut.round_sf(max_flow_new .to(u.L/u.s),2))
 
-
 ```
 
     The new maximum flow rate at 10 Celsius is 12 l/s.
@@ -266,17 +265,12 @@ Since the equation for calculating the friction factor is different for laminar 
 
 def fofRe(ReyNum,PipeRough):
   if ReyNum > 2100:
-    f= pc.fric(max_flow,actual_ID,nu,PipeRough)
+    f= 0.25/(math.log10((PipeRough/3.7)+(5.74/ReyNum**(0.9))))**2
   else:
-    f= 64/ReyNum
+    f = 64/ReyNum
   return f
 
-ReyNum= pc.re_pipe(max_flow,actual_ID,nu)
-ReyNum
-PipeRough
 
-friction_factor= fofRe(ReyNum,PipeRough)
-friction_factor
 ```
 
 ### 12)
@@ -286,8 +280,7 @@ Create a beautiful Moody diagram. Include axes labels and show a legend that cle
 
 
 ### 12a)
-You will be creating a Moody diagram showing Reynolds number vs friction factor for multiple dimensionless pipe roughnesses. The first step to do this is to define the number of dimensionless pipe roughnesses you want to plot. We will plot 8 curves for the following values: 0, 0.0001, 0.0003, 0.001, 0.003, 0.01, 0.03, 0.1. We will plot an additional curve, which will be a straight line, for laminar flow, since it is not
-dependent on the pipe roughness value.
+You will be creating a Moody diagram showing Reynolds number vs friction factor for multiple dimensionless pipe roughnesses. The first step to do this is to define the number of dimensionless pipe roughnesses you want to plot. We will plot 8 curves for the following values: 0, 0.0001, 0.0003, 0.001, 0.003, 0.01, 0.03, 0.1. We will plot an additional curve, which will be a straight line, for laminar flow, since it is not dependent on the pipe roughness value.
 
 - Create an array for the dimensionless pipe roughness values, using `np.array([])`.
 - Specify the amount of data points you want to plot for each curve. We will be using 50 points.
@@ -304,6 +297,20 @@ Because the Moody diagram is a log-log plot, we need to ensure that all 50 point
 - Variable defining the amount of points on each pipe roughness curve
 - Two arrays created using `np.logspace` for turbulent and laminar Reynolds numbers, which will be the x-axis values for the Moody diagram
 
+```Python
+
+eGraph= np.array([0,0.0001,0.0003,0.001,0.003,0.01,0.03,0.1])
+num_points= 50
+array_laminar= np.logspace(math.log10(670),math.log10(2100),num_points)
+array_turbulent= np.logspace(math.log10(3500),math.log10(100000000),num_points)
+
+print(eGraph)
+print(array_laminar)
+print(array_turbulent)
+
+```
+
+
 Note: The bounds for the laminar Reynolds numbers array should span between 670 and the predefined transition number used in Problem 11. The bounds for the turbulent Reynolds numbers array should span between 3,500 and 100,000,000. These ranges are chosen to make the curves fit well within the graph and to intentionally omit data in the transition range between laminar and turbulent flows.
 
 ### 12b)
@@ -318,6 +325,23 @@ You will repeat this process to find the friction factors for laminar flow. The 
 - One 1-D array containing friction factor values for laminar flow.
 - One 2-D array containing friction factor values for each dimensionless pipe roughness for turbulent flow.
 
+```Python
+import numpy as np
+
+y_axis_laminar= np.zeros((num_points))
+for x in range(num_points):
+  y_axis_laminar[x]= fofRe(array_laminar[x],0)
+
+print(y_axis_laminar)
+
+y_axis_turbulent= np.zeros((len(eGraph),num_points))
+for y in range (0,len(eGraph)):
+  for z in range (0,num_points):
+    y_axis_turbulent[y,z]= fofRe(array_turbulent[z],eGraph[y])
+
+print(y_axis_turbulent)
+```
+
 ### 12c)
 Now, we are ready to start making the Moody diagram! The plot formatting is included for you in the cell below. You will add to this cell the code that will actually plot the arrays you brought into existence in 12a) and 12b) with a legend. For the sake of your own sanity, please only add code where specified.
 
@@ -327,9 +351,45 @@ Now, we are ready to start making the Moody diagram! The plot formatting is incl
 - Now plot the data point you calculated for the pipeline problem. Use the Reynolds number and friction factor obtained in Problem 5. Because this is a single point, it should be plotted as a circle instead of a line.
 - You will need to make a legend for the graph using `ax.legend(stringarray, loc = 'best')` The first input, `stringarray`, must be an array composed of strings instead of numbers. The array you created which contains the dimensionless pipe roughness values (`eGraph`) can be converted into a string array for your legend (`eGraph.astype('str'))`. You will need to add 'Laminar' and 'Pipeline' as strings to the new `eGraph` string array. Perhaps you will find `np.append(basestring, [('string1','string2')])` to be useful.
 
+```Python
+
+plt.figure('ax',(10,8))
+plt.yscale('log')
+plt.xscale('log')
+plt.grid(b=True, which='major', color='k', linestyle='-', linewidth=0.5)
+plt.grid(b=True, which='minor', color='0.5', linestyle='-', linewidth=0.5)
+
+plt.xlabel('Reynolds Number', fontsize=30)
+plt.ylabel('Friction Factor', fontsize=30)
+
+print(len(eGraph))
+for x in range(0,len(eGraph)):
+  plt.plot(array_turbulent,y_axis_turbulent[x,:],'-',linewidth=4)
+
+plt.plot(array_laminar,y_axis_laminar,'-',linewidth=4)
+
+plt.plot(ReyNum,FricFac,'o')
+
+mylegend = eGraph.astype('str')
+mylegend= np.append(mylegend, [('Laminar', 'Pipeline')])
+leg= plt.legend(mylegend, loc='best')
+
+plt.show()
+
+```
+
 ### 13)
-What did you find most difficult about learning to use Python? Create a brief example as an extension to this tutorial to help students learn
-the topic that you found most difficult.
+What did you find most difficult about learning to use Python? Create a brief example as an extension to this tutorial to help students learn the topic that you found most difficult.
+
+I found it difficult to understand how to use the different functions given, and how to use several within a for loop to calculate a desired result. An example problem to practice this skill would be to use a loop to add values to an empty array.
+
+For example: using an array to add the friction factors to an empty array.
+
+Given an array sample_values
+
+practice_array= np.zeros(len(sample_values))
+for x in range(len(sample_values)):
+  practice_array[x]= array_laminar[x]
 
 ## Final Pointer
 Before submitting a file for others to use, you need to verify that all of the dependencies are defined and that you didn't accidently delete a definition that is required. You can do this by placing your cursor in a python code section and then clicking on the python 3|idle in the toolbar at the bottom of the Atom window. Select restart Python 3 kernel. Then execute all of the python code in your document from top to bottom and make sure that all of the code performs as expected.
